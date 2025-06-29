@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BETA APARTMENTS</title>
+    <link rel="stylesheet" href="style.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
+
+</head>
+<body style="background-image: url('realestateimg3.jpg');">
+
+    <h1 class="css-web-name">BETA APARTMENTS</h1>
+
+    <section id="auth-section">
+        <h2>Register / Login</h2>
+        <input type="email" id="email" placeholder="Email">
+        <input type="password" id="password" placeholder="Password">
+        <button onclick="registerUser()">Register</button>
+        <button onclick="loginUser()">Login</button>
+        <p id="auth-status"></p>
+        
+        <button id="forgot-password-btn" type="button" style="margin-top: 10px;">Forgot Password?</button>
+    </section>
+
+    <section id="dashboard-section" style="display:none">
+        <h2>Welcome <span id="user-email"></span></h2>
+        <button onclick="logoutUser()">Logout</button>
+    </section>
+
+    <section id="listing-section" style="display:none">
+        <h2>New Apartment Listing</h2>
+        <h3 style="text-align: center; color: red;">Note: "you can delete items within 10 minutes of posting and you can only modify one item twice"<br><b>WARNING!!:</b> meet agents at open locations to avoid "KIDNAPPING and ASSUALTS"</h3>
+
+        <input type="text" id="title" placeholder="Title">
+        <input type="text" id="location" list="cities" placeholder="Enter or select location" />
+        <datalist id="cities"></datalist> <input type="number" id="rent" placeholder="Rent">
+        <textarea id="description" placeholder="Description"></textarea>
+        <input type="tel" id="listing-phone" placeholder="Phone Number"><br>
+
+        <input type="file" id="listing-image" accept="image/*" multiple />
+        <div id="image-preview"></div> <button onclick="addListing()">Add Listing</button>
+
+        <h2 class="css-available-listing">Available Listings</h2>
+        <div id="listing-container"></div>
+    </section>
+
+    <section id="messaging-section" style="display:none">
+        <h2>Contact Support</h2>
+        <div style="text-align: center; margin-bottom: 20px;">
+            <button id="contact-support-btn" style="padding-right: 50px; padding-left: 50px;">
+                Contact Support
+            </button>
+        </div>
+        <div id="message-inbox"></div>
+    </section>
+
+    <script src="main.js"></script>
+</body>
+</html>

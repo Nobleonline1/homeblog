@@ -1,0 +1,430 @@
+/* Basic Reset & Global Styles */
+*,
+*::before,
+*::after {
+    box-sizing: border-box; /* Include padding and border in the element's total width and height */
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    line-height: 1.6;
+    color: #333;
+    background-color: #f4f4f4; /* A light background color */
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed; /* Keeps background image fixed when scrolling */
+    padding: 20px; /* Overall padding for the body */
+    min-height: 100vh; /* Ensure body takes at least full viewport height */
+    display: flex; /* Use flexbox for body to easily center content */
+    flex-direction: column;
+    align-items: center; /* Center content horizontally */
+}
+
+/* Headings */
+h1, h2, h3 {
+    text-align: center;
+    color: #2c3e50;
+    margin-bottom: 15px;
+}
+
+h1.css-web-name {
+    color: #e74c3c; /* Red color for the web name */
+    font-size: 7vw; /* Larger font for the main title */
+    margin-top: 20px;
+    margin-bottom: 30px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+}
+
+h2.css-available-listing {
+    margin-top: 30px;
+    border-bottom: 2px solid #ddd;
+    padding-bottom: 10px;
+}
+
+/* Sections */
+section {
+    background-color: rgba(255, 255, 255, 0.95); /* Slightly transparent white background */
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    padding: 25px;
+    margin-bottom: 25px;
+    width: 100%;
+    max-width: 500px; /* Max width for smaller screens */
+}
+
+/* Form Elements */
+input[type="email"],
+input[type="password"],
+input[type="text"],
+input[type="number"],
+input[type="tel"],
+textarea,
+select {
+    width: calc(100% - 20px); /* Full width minus padding */
+    padding: 12px;
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 1em;
+    display: block; /* Ensure inputs take full available width */
+    max-width: 100%; /* Prevent overflow */
+}
+
+textarea {
+    resize: vertical; /* Allow vertical resizing */
+    min-height: 80px;
+}
+
+button {
+    background-color: #3498db; /* Blue button */
+    color: white;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+    margin-right: 10px; /* Space between buttons */
+    margin-bottom: 10px;
+    transition: background-color 0.2s ease;
+}
+
+button:hover {
+    background-color: #2980b9;
+}
+
+button:last-child {
+    margin-right: 0; /* No margin on the last button */
+}
+
+/* Auth Section Specifics */
+#auth-status {
+    text-align: center;
+    margin-top: 10px;
+    font-weight: bold;
+    color: #27ae60; /* Green for success */
+}
+
+/* Listing Section - General */
+#listing-section h3 {
+    font-size: 0.9em;
+    color: #e74c3c;
+    margin-bottom: 20px;
+}
+
+/* Image Preview */
+#image-preview {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px; /* Space between images */
+    margin-top: 15px;
+    margin-bottom: 15px;
+    justify-content: center;
+}
+
+.preview-wrapper {
+    position: relative;
+    width: 100px; /* Fixed width for preview thumbnails */
+    height: 100px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.preview-wrapper .preview-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Crop image to fit without distortion */
+    border-radius: 5px; /* Apply border-radius to image too */
+}
+
+.preview-wrapper button {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background-color: rgba(231, 76, 60, 0.8); /* Red with transparency */
+    color: white;
+    font-size: 0.7em;
+    padding: 3px 6px;
+    border-radius: 3px;
+    cursor: pointer;
+    line-height: 1; /* For better button text alignment */
+    margin: 0; /* Override previous button margin */
+}
+
+.preview-wrapper button:hover {
+    background-color: #c0392b;
+}
+
+/* Listing Container & Items */
+#listing-container {
+    display: grid;
+    gap: 20px; /* Space between listing items */
+    margin-top: 20px;
+}
+
+.listing-item {
+    background-color: #fff;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    word-wrap: break-word; /* Ensure long words break */
+    overflow: hidden; /* Clear floats/contain content */
+}
+
+.listing-item strong {
+    font-size: 1.2em;
+    color: #34495e;
+    display: block; /* Make title take full line */
+    margin-bottom: 5px;
+}
+
+.listing-item span {
+    display: block; /* Make location/rent/description take full line */
+    margin-bottom: 3px;
+}
+
+.listing-item em {
+    display: block;
+    margin-top: 10px;
+    color: #555;
+    font-style: normal; /* Remove default italic style for emphasis */
+}
+
+.listing-item small {
+    display: block;
+    margin-top: 5px;
+    color: #888;
+    font-size: 0.8em;
+}
+
+.listing-item .preview-image {
+    max-width: 100%; /* Ensure images don't overflow */
+    height: auto;
+    border-radius: 4px;
+    margin-top: 10px;
+    margin-bottom: 5px;
+    display: block; /* Ensure image takes its own line */
+}
+
+.listing-actions {
+    margin-top: 15px;
+    display: flex;
+    flex-wrap: wrap; /* Allow buttons to wrap */
+    gap: 8px; /* Space between action buttons */
+    justify-content: flex-end; /* Align actions to the right */
+}
+
+.listing-actions button {
+    padding: 8px 12px;
+    font-size: 0.9em;
+    margin: 0; /* Reset previous button margins */
+}
+
+.rented-tag {
+    background-color: #e74c3c; /* Red background for rented tag */
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-weight: bold;
+    font-size: 0.8em;
+    display: inline-block; /* Display as block for spacing below it */
+    margin-top: 10px;
+    text-transform: uppercase;
+}
+
+/* Filter Section (Dynamically added by JS) */
+body > div:first-of-type { /* Target the dynamically created filter div */
+    background-color: rgba(255, 255, 255, 0.95);
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+    padding: 15px;
+    margin-bottom: 20px;
+    width: 100%;
+    max-width: 500px;
+    display: flex;
+    flex-wrap: wrap; /* Allow filter inputs to wrap */
+    gap: 10px; /* Space between filter elements */
+    justify-content: center;
+    align-items: center;
+}
+
+body > div:first-of-type label {
+    font-weight: bold;
+    color: #333;
+}
+
+body > div:first-of-type input,
+body > div:first-of-type select {
+    flex-grow: 1; /* Allow inputs to grow and fill space */
+    min-width: 120px; /* Minimum width before wrapping */
+    margin-bottom: 0; /* Remove default margin */
+}
+
+/* Messaging Section */
+#messaging-section {
+    max-width: 600px; /* Slightly wider for messages */
+}
+
+#messaging-section input[type="text"],
+#messaging-section textarea {
+    width: 100%;
+}
+
+#message-inbox {
+    border: 1px solid #eee;
+    border-radius: 5px;
+    padding: 15px;
+    max-height: 400px; /* Max height for inbox */
+    overflow-y: auto; /* Enable scrolling if messages exceed height */
+    margin-top: 20px;
+    background-color: #fcfcfc;
+}
+
+.message-group {
+    border-bottom: 1px dashed #e0e0e0;
+    padding-bottom: 15px;
+    margin-bottom: 15px;
+}
+
+.message-group:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.message-group h3 {
+    font-size: 1.1em;
+    color: #3498db;
+    text-align: left;
+    margin-bottom: 10px;
+}
+
+.sent-message {
+    background-color: #e8f5e9; /* Light green for sent messages */
+    padding: 8px 12px;
+    border-radius: 15px 15px 0 15px; /* Bubble shape */
+    margin-left: auto; /* Push to right */
+    max-width: 80%;
+    margin-bottom: 5px;
+    text-align: right;
+    word-wrap: break-word;
+}
+
+.received-message {
+    background-color: #e3f2fd; /* Light blue for received messages */
+    padding: 8px 12px;
+    border-radius: 15px 15px 15px 0; /* Bubble shape */
+    margin-right: auto; /* Push to left */
+    max-width: 80%;
+    margin-bottom: 5px;
+    text-align: left;
+    word-wrap: break-word;
+}
+
+.sent-message small,
+.received-message small {
+    font-size: 0.75em;
+    color: #777;
+    display: block; /* Timestamp on its own line */
+    margin-top: 3px;
+}
+
+.reply-box {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #f0f0f0;
+}
+
+.reply-box input {
+    flex-grow: 1;
+    margin-bottom: 0;
+}
+
+.reply-box button {
+    margin-bottom: 0;
+}
+
+/* --- Media Queries for Responsiveness --- */
+
+/* For Tablets and Larger Screens (e.g., width >= 768px) */
+@media (min-width: 768px) {
+    h1.css-web-name {
+        font-size: 3.5em;
+    }
+
+    section {
+        max-width: 700px; /* Wider sections on tablets */
+        padding: 35px;
+    }
+
+    #listing-section h3 {
+        font-size: 1em;
+    }
+
+    /* Adjust form element width to prevent them from taking entire line
+       when multiple buttons are present */
+    #auth-section input,
+    #listing-section input:not([type="file"]):not([type="number"]),
+    #listing-section textarea {
+        width: auto; /* Revert to auto width for better alignment */
+        display: inline-block; /* Allow them to be side-by-side if enough space */
+        margin-right: 15px; /* Add some right margin */
+        min-width: 200px;
+    }
+
+    #listing-section input[type="file"] {
+        margin-right: 15px;
+        margin-top: 10px;
+    }
+
+    #listing-section button,
+    #auth-section button {
+        /* No specific changes here, they should adapt */
+    }
+
+    body > div:first-of-type { /* Filter section */
+        max-width: 700px;
+        justify-content: space-between; /* Distribute items evenly */
+    }
+
+    body > div:first-of-type input,
+    body > div:first-of-type select {
+        min-width: unset; /* Remove min-width constraint */
+        width: auto; /* Auto width based on content/flex-grow */
+    }
+
+    #listing-container {
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* 2 columns on larger screens */
+    }
+
+    .listing-actions {
+        justify-content: flex-end; /* Keep aligning to the right */
+    }
+}
+
+/* For Desktops and Larger Screens (e.g., width >= 1024px) */
+@media (min-width: 1024px) {
+    h1.css-web-name {
+        font-size: 4em;
+    }
+
+    section {
+        max-width: 800px; /* Even wider sections on desktops */
+        padding: 40px;
+    }
+
+    #messaging-section {
+        max-width: 700px;
+    }
+
+    #listing-container {
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); /* Potentially more columns or wider items */
+    }
+}

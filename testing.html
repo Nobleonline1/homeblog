@@ -1,0 +1,172 @@
+// JavaScript
+
+// Initialize Firebase
+const firebaseConfig = {
+  apiKey: "AIzaSyC2KFvT6R11v6CnyNfxT2qSBbAzBM3D8HA",
+  authDomain: "apartment-8ccc6.firebaseapp.com",
+  projectId: "apartment-8ccc6",
+  storageBucket: "apartment-8ccc6.appspot.com",
+  messagingSenderId: "594096160044",
+  appId: "1:594096160044:web:7925a4817256392526c089"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+const storage = firebase.storage();
+
+let lastRentedUndo = {};
+
+function tagAsRented(id) {
+  if (!confirm("Are you sure you want to mark this listing as RENTED OUT?")) return;
+
+  db.collection("listings").doc(id).get().then(doc => {
+    lastRentedUndo[id] = doc.data();
+    return db.collection("listings").doc(id).update({ rented: true });
+  }).then(() => alert("Marked as rented. Click 'Undo' to revert."))
+    .catch(err => alert("Error tagging: " + err.message));
+}
+
+function undoTagAsRented(id) {
+  const previous = lastRentedUndo[id];
+  if (!previous) return;
+  db.collection("listings").doc(id).update({ rented: false })
+    .then(() => alert("Reverted 'Rented' status."))
+    .catch(err => alert("Error reverting: " + err.message));
+}
+
+function deleteListing(id, timestamp) {
+  const now = Date.now();
+  const createdTime = timestamp.toDate().getTime();
+  const tenMinutes = 10 * 60 * 1000;
+
+  if (now - createdTime > tenMinutes) {
+    alert("You can only delete listings within 10 minutes of creation.");
+    return;
+  }
+
+  if (!confirm("Are you sure you want to delete this listing? This action cannot be undone.")) return;
+
+  db.collection("listings").doc(id).delete()
+    .then(() => alert("Listing deleted."))
+    .catch(err => alert("Error deleting: " + err.message));
+}
+
+function replyToListing(recipientId) {
+  const messagingSection = document.getElementById("messaging-section");
+  const recipientInput = document.getElementById("recipientId");
+
+  if (messagingSection && recipientInput) {
+    messagingSection.style.display = "block";
+    recipientInput.value = recipientId;
+    recipientInput.focus();
+  }
+}
+
+function handleImagePreview(event) {
+  const files = event.target.files;
+  const previewContainer = document.getElementById("image-preview");
+  previewContainer.innerHTML = "";
+  for (const file of files) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = document.createElement("img");
+      img.src = e.target.result;
+      img.className = "preview-image";
+      previewContainer.appendChild(img);
+    };
+    reader.readAsDataURL(file);
+  }
+}
+
+function addListing() {
+  const title = document.getElementById('title').value;
+  const location = document.getElementById('location').value;
+  const rent = document.getElementById('rent').value;
+  const description = document.getElementById('description').value;
+  const phone = document.getElementById('listing-phone').value;
+  const imageFiles = document.getElementById('listing-image').files;
+
+  if (imageFiles.length === 0) return alert('Please upload at least one photo');
+
+  const uploadPromises = Array.from(imageFiles).map(file => {
+    const imageRef = storage.ref(`listing_images/${Date.now()}_${file.name}`);
+    return imageRef.put(file).then(snapshot => snapshot.ref.getDownloadURL());
+  });
+
+  Promise.all(uploadPromises)
+    .then(urls => {
+      return db.collection('listings').add({
+        title, location, rent, description, phone,
+        imageUrls: urls,
+        createdAt: new Date(),
+        userId: auth.currentUser.uid
+      });
+    }).then(() => {
+      alert('Listing added!');
+      loadListings();
+    }).catch(err => alert(err.message));
+}
+
+function loadListings() {
+  const container = document.getElementById("listing-container");
+  const filterElement = document.getElementById("rented-filter");
+  const filter = filterElement ? filterElement.value : "all";
+  container.innerHTML = "Loading listings...";
+
+  db.collection("listings").orderBy("createdAt", "desc")
+    .onSnapshot(snapshot => {
+      container.innerHTML = "";
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const isOwner = auth.currentUser && data.userId === auth.currentUser.uid;
+        const isRented = data.rented;
+
+        if ((filter === "rented" && !isRented) || (filter === "available" && isRented)) return;
+
+        const div = document.createElement("div");
+        const timestamp = data.createdAt?.toDate ? data.createdAt.toDate() : new Date();
+
+        const imagesHtml = (data.imageUrls || []).map(url => `<img src="${url}" class="preview-image" />`).join('');
+
+        div.innerHTML = `
+          <strong>${data.title}</strong><br>
+          <span><strong>Location:</strong> ${data.location}</span><br>
+          <span><strong>Rent:</strong> ₦${data.rent}</span><br>
+          ${data.description}<br>
+          ${imagesHtml}<br>
+          <em>Phone: ${data.phone || 'Not provided'}</em><br>
+          ${isRented ? '<span class="rented-tag">RENTED OUT</span><br>' : ''}
+          <small>${timestamp.toLocaleString()}</small><br>
+          <button onclick="replyToListing('${data.userId}')">Reply</button>
+          ${isOwner ? `<button onclick="deleteListing('${doc.id}', { toDate: () => new Date('${timestamp.toISOString()}') })">Delete</button>` : ''}
+          ${isOwner && !isRented ? `<button onclick="tagAsRented('${doc.id}')">Mark as Rented</button>` : ''}
+          ${isOwner && isRented ? `<button onclick="undoTagAsRented('${doc.id}')">Undo</button>` : ''}
+        `;
+
+        container.appendChild(div);
+      });
+    });
+}
+
+// Add filter control
+const filterContainer = document.createElement('div');
+filterContainer.innerHTML = `
+  <label for="rented-filter">Show: </label>
+  <select id="rented-filter" onchange="loadListings()">
+    <option value="all">All</option>
+    <option value="available">Available</option>
+    <option value="rented">Rented</option>
+  </select>
+`;
+
+document.addEventListener("DOMContentLoaded", () => {
+  const container = document.getElementById("listing-container");
+  if (container) {
+    container.parentNode.insertBefore(filterContainer, container);
+    const imageInput = document.getElementById("listing-image");
+    if (imageInput) {
+      imageInput.addEventListener("change", handleImagePreview);
+    }
+  }
+});
