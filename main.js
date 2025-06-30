@@ -1,11 +1,11 @@
-/* public/main.js */
+/* public/main.js - COMPLETE AND CORRECTED */
 
 // Firebase Configuration
 const firebaseConfig = {
     apiKey: "AIzaSyC2KFvT6R11v6CnyNfxT2qSBbAzBM3D8HA",
     authDomain: "apartment-8ccc6.firebaseapp.com",
     projectId: "apartment-8ccc6",
-    storageBucket: "apartment-8ccc6.appspot.com",
+    storageBucket: "apartment-8ccc6.appspot.com", // Ensure this matches your actual bucket ID for Firebase Storage (gs://apartment-8ccc6)
     messagingSenderId: "594096160044",
     appId: "1:594096160044:web:7925a4817256392526c089"
 };
@@ -98,6 +98,8 @@ function loginUser() {
             const user = userCredential.user;
 
             // --- START: Email Verification Check for Login ---
+            // This is primarily for immediate feedback after login attempts.
+            // The main email verification check is in onAuthStateChanged with user.reload()
             if (!user.emailVerified) {
                 authStatus.innerHTML = `
                     Your email (${user.email}) is not verified. Please check your inbox for a verification link.
@@ -121,9 +123,8 @@ function loginUser() {
             // Firebase Auth State Listener will handle displaying dashboard sections
             // based on `auth.onAuthStateChanged` below.
 
-            // You might want to explicitly update Firestore to mark as verified if you used a flag
-            // However, `user.emailVerified` is directly from Firebase Auth, which is more reliable.
-            // If you still want to update your Firestore 'users' collection:
+            // Optional: If you want to update your Firestore 'users' collection to mark as verified
+            // This part is often not strictly necessary as `user.emailVerified` from Auth is canonical.
             // db.collection('users').doc(user.uid).update({ isEmailVerified: true })
             //     .catch(e => console.error("Error updating verification status in Firestore:", e));
 
@@ -181,7 +182,7 @@ function resetPassword() {
         authStatus.innerText = "Please enter your email address to reset your password.";
         return;
     }
-    if (!isValidEmail(email)) {
+    if (!isValidEmail(email)) { // Assuming isValidEmail function exists somewhere
         authStatus.innerText = "Please enter a valid email address.";
         return;
     }
@@ -212,6 +213,13 @@ function resetPassword() {
             console.error("Password reset error:", err);
         });
 }
+
+// Simple email validation (add more robust if needed)
+function isValidEmail(email) {
+    const re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    return re.test(String(email).toLowerCase());
+}
+
 
 // --- Listing Management Functions ---
 
@@ -271,6 +279,7 @@ async function addListing() {
 
     } catch (err) {
         alert("Error adding listing: " + err.message);
+        console.error("Error adding listing:", err);
     }
 }
 
@@ -382,13 +391,9 @@ function undoTagAsRented(id) {
 }
 
 // --- Contact Support Function ---
-/**
- * Sends a message to a predefined support UID.
- * You'll need to decide on a 'support' user ID and potentially their email.
- * For demonstration, I'll use a placeholder UID.
- */
-const SUPPORT_UID = "UPDJRi0LAteikLr7NasY47QDiQz1"; // <<< IMPORTANT: Replace with an actual UID
-const SUPPORT_EMAIL = "support@yourdomain.com"; // <<< IMPORTANT: Replace with actual support email
+// <<< IMPORTANT: Replace with an actual UID and email for your support user >>>
+const SUPPORT_UID = "YOUR_ACTUAL_SUPPORT_USER_UID_HERE"; // e.g., 'abcdefg12345'
+const SUPPORT_EMAIL = "your.support.email@example.com"; // e.g., 'support@yourdomain.com'
 
 async function contactSupport() {
     const user = auth.currentUser;
@@ -416,6 +421,7 @@ async function contactSupport() {
         alert("Your message has been sent to support!");
     } catch (err) {
         alert("Error sending message to support: " + err.message);
+        console.error("Error sending message to support:", err);
     }
 }
 
@@ -506,7 +512,25 @@ function loadUserInboxLive() {
             groupDiv.appendChild(replyDiv);
 
             inbox.appendChild(groupDiv);
-        });
+        },
+        // ADDED: Error handler for the onSnapshot listener
+        (error) => {
+            console.error("Firestore inbox onSnapshot error:", error);
+            const user = auth.currentUser;
+            let errorMessage = "Error loading messages. Please try again.";
+            if (error.code === 'permission-denied') {
+                errorMessage = "Permissions error: You need to be logged in and have a verified email to view messages.";
+                if (user && !user.emailVerified) {
+                    errorMessage += " Your email is not verified. Check your inbox.";
+                } else if (!user) {
+                    errorMessage += " You are not logged in.";
+                }
+            }
+            if (inbox) {
+                inbox.innerHTML = `<p style="color: red;">${errorMessage}</p>`;
+            }
+        }
+    );
 }
 
 /**
@@ -537,6 +561,7 @@ async function contactSupportFromReply(messageBody) {
         document.getElementById('reply-to-support').value = "";
     } catch (err) {
         alert("Error sending reply to support: " + err.message);
+        console.error("Error sending reply to support:", err);
     }
 }
 
@@ -545,6 +570,10 @@ async function contactSupportFromReply(messageBody) {
 
 /**
  * Loads and displays listings, applying filters.
+ * IMPORTANT: This function assumes the calling context (onAuthStateChanged) has
+ * ALREADY verified that currentUser is non-null and currentUser.emailVerified is true.
+ * It will not perform the checks itself to avoid redundant alerts/messages
+ * when called from onAuthStateChanged.
  */
 async function loadListings() {
     const container = document.getElementById("listing-container");
@@ -556,12 +585,8 @@ async function loadListings() {
 
     if (!container) return; // Exit if container doesn't exist
 
-    // If user is not verified, clear container and show message
-    const currentUser = auth.currentUser;
-    if (!currentUser || !currentUser.emailVerified) {
-        container.innerHTML = "<p>Login and verify your email to view listings.</p>";
-        return;
-    }
+    // The auth check has been primarily moved to the onAuthStateChanged listener to be definitive.
+    // If loadListings is called, we assume the user is authenticated and verified.
 
     container.innerHTML = "Loading listings...";
 
@@ -573,6 +598,7 @@ async function loadListings() {
                 return;
             }
 
+            const currentUser = auth.currentUser; // Get current user inside snapshot for reactivity
             snapshot.forEach(doc => {
                 const data = doc.data();
                 const isOwner = currentUser && data.userId === currentUser.uid; // Use currentUser
@@ -617,7 +643,25 @@ async function loadListings() {
                 `;
                 container.appendChild(div);
             });
-        });
+        },
+        // ADDED: Error handler for the onSnapshot listener
+        (error) => {
+            console.error("Firestore listings onSnapshot error:", error);
+            const currentUser = auth.currentUser;
+            let errorMessage = "Error loading listings. Please try again.";
+            if (error.code === 'permission-denied') {
+                errorMessage = "Permissions error: You need to be logged in and have a verified email to view listings.";
+                if (currentUser && !currentUser.emailVerified) {
+                    errorMessage += " Your email is not verified. Check your inbox.";
+                } else if (!currentUser) {
+                    errorMessage += " You are not logged in.";
+                }
+            }
+            if (container) {
+                container.innerHTML = `<p style="color: red;">${errorMessage}</p>`;
+            }
+        }
+    );
 }
 
 // --- Utility and UI Setup Functions ---
@@ -718,17 +762,30 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // Firebase Auth State Listener
-    auth.onAuthStateChanged(user => {
+    auth.onAuthStateChanged(async user => { // Made async to await user.reload()
         const authSection = document.getElementById('auth-section');
         const dashboardSection = document.getElementById('dashboard-section');
         const listingSection = document.getElementById('listing-section');
         const messagingSection = document.getElementById('messaging-section');
         const userEmailSpan = document.getElementById('user-email');
         const authStatus = document.getElementById('auth-status');
+        const listingContainer = document.getElementById("listing-container");
+        const inboxContainer = document.getElementById("message-inbox");
+
 
         if (user) {
+            // Attempt to reload the user's data to get the freshest `emailVerified` status
+            try {
+                await user.reload(); // This is crucial to get the latest emailVerified status
+                console.log("User reloaded. Email Verified (latest):", user.emailVerified);
+            } catch (error) {
+                console.error("Error reloading user data:", error);
+                // Handle error if reload fails, e.g., user token invalid.
+                // For now, continue with potentially stale data or log out if critical.
+            }
+
             if (user.emailVerified) {
-                // User is logged in and email is verified
+                // User is logged in and email is verified (confirmed by reload)
                 authSection.style.display = 'none';
                 dashboardSection.style.display = 'block';
                 listingSection.style.display = 'block';
@@ -736,10 +793,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (userEmailSpan) userEmailSpan.innerText = user.email;
                 if (authStatus) authStatus.innerText = "Logged in successfully!"; // Clear any previous auth status
 
-                loadListings(); // Load listings when user logs in and is verified
-                loadUserInboxLive(); // Load messages for the logged-in and verified user
+                // Now call loadListings and loadUserInboxLive ONLY when confirmed verified
+                loadListings();
+                loadUserInboxLive();
             } else {
-                // User is logged in but email is NOT verified
+                // User is logged in but email is NOT verified (even after reload)
                 authSection.style.display = 'block'; // Keep auth section visible to prompt verification
                 dashboardSection.style.display = 'none';
                 listingSection.style.display = 'none';
@@ -749,36 +807,36 @@ document.addEventListener("DOMContentLoaded", () => {
                     Your email (${user.email}) is not verified. Please check your inbox for a verification link.
                     <button id="resend-verification-btn" style="margin-top: 10px;">Resend Verification Email</button>
                 `;
+                // Clear content if user is unverified
+                if (listingContainer) listingContainer.innerHTML = "<p>Login and verify your email to view listings.</p>";
+                if (inboxContainer) inboxContainer.innerHTML = '<p>Login and verify your email to view messages.</p>';
+
                 // Attach event listener for resend button if it exists
                 document.getElementById('resend-verification-btn')?.addEventListener('click', () => {
                     resendVerificationEmail(user);
                 });
-                // Clear content areas
-                if (document.getElementById('listing-container')) document.getElementById('listing-container').innerHTML = '<p>Verify your email to view listings.</p>';
-                if (document.getElementById('message-inbox')) document.getElementById('message-inbox').innerHTML = '<p>Verify your email to view messages.</p>';
             }
         } else {
-            // User is logged out
+            // User is signed out.
             authSection.style.display = 'block';
             dashboardSection.style.display = 'none';
             listingSection.style.display = 'none';
             messagingSection.style.display = 'none';
             if (userEmailSpan) userEmailSpan.innerText = '';
-            if (authStatus) authStatus.innerText = ''; // Clear status when logged out
-            // Clear user-specific data or messages when logged out
-            if (document.getElementById('listing-container')) document.getElementById('listing-container').innerHTML = '';
-            if (document.getElementById('message-inbox')) document.getElementById('message-inbox').innerHTML = '';
+            if (authStatus) authStatus.innerText = "Please log in or register.";
+
+            // Clear content when logged out
+            if (listingContainer) listingContainer.innerHTML = "<p>Login and verify your email to view listings.</p>";
+            if (inboxContainer) inboxContainer.innerHTML = '<p>Login and verify your email to view messages.</p>';
         }
     });
 
-    // Attach event listener for the forgot password button
-    document.getElementById('forgot-password-btn')?.addEventListener('click', resetPassword);
-
-    // Attach event listener for the new "Contact Support" button
-    document.getElementById('contact-support-btn')?.addEventListener('click', contactSupport);
+    // --- Event listener attachments for buttons ---
+    // Make sure your HTML has these IDs for the buttons
+    document.getElementById('register-btn')?.addEventListener('click', registerUser);
+    document.getElementById('login-btn')?.addEventListener('click', loginUser);
+    document.getElementById('logout-btn')?.addEventListener('click', logoutUser);
+    document.getElementById('add-listing-btn')?.addEventListener('click', addListing);
+    document.getElementById('reset-password-btn')?.addEventListener('click', resetPassword);
+    document.getElementById('contact-support-btn')?.addEventListener('click', contactSupport); // Assuming you have a button for this
 });
-
-// Basic email validation utility function (from your original code)
-function isValidEmail(email) {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-}
