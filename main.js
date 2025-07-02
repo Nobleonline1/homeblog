@@ -5,12 +5,11 @@ const firebaseConfig = {
     apiKey: "AIzaSyC2KFvT6R11v6CnyNfxT2qSBbAzBM3D8HA",
     authDomain: "apartment-8ccc6.firebaseapp.com",
     projectId: "apartment-8ccc6",
-    // MODIFICATION START: Corrected Storage Bucket ID based on previous diagnosis
-    // Change this to 'apartment-8ccc6' if that's your actual bucket name.
-    // If your bucket name is 'apartment-8ccc6.firebasestorage.app', use that instead.
-    // VERIFY THIS IN YOUR FIREBASE CONSOLE -> Storage -> Files tab -> Look at the gs:// URL
-    storageBucket: "apartment-8ccc6", // CHANGED from "apartment-8ccc6.appspot.com"
-    // MODIFICATION END
+    // ******** CRITICAL FIX HERE ********
+    // This MUST exactly match the name you see after 'gs://' in your Firebase Storage console.
+    // Based on your latest info, it is 'apartment-8ccc6.firebasestorage.app'
+    storageBucket: "apartment-8ccc6.firebasestorage.app", // CORRECTED
+    // ***********************************
 
     messagingSenderId: "594096160044",
     appId: "1:594096160044:web:7925a4817256392526c089"
@@ -56,7 +55,7 @@ function registerUser() {
             await user.sendEmailVerification();
             authStatus.innerText = `Registration successful! A verification email has been sent to ${email}. Please check your inbox (and spam folder) and verify your email before logging in.`;
             alert(`A verification email has been sent to ${email}. Please verify your email before logging in.`);
-            
+
             // Immediately sign out the user after sending verification email
             // This forces them to verify and then log in again.
             await auth.signOut();
@@ -250,11 +249,12 @@ async function addListing() {
     if (imageFiles.length === 0) {
         return alert('Please upload at least one photo.');
     }
-    
+
     try {
         const imageUrls = [];
         for (const file of Array.from(imageFiles)) {
             try {
+                // Ensure the path is correct within the bucket
                 const storageRef = storage.ref(`listing_images/${Date.now()}_${file.name}`);
                 const snapshot = await storageRef.put(file);
                 const url = await snapshot.ref.getDownloadURL();
@@ -263,9 +263,8 @@ async function addListing() {
                 // More specific error handling for individual image uploads
                 console.error(`Error uploading image ${file.name}:`, imageUploadError);
                 alert(`Failed to upload image ${file.name}. Please try again. Error: ${imageUploadError.message}`);
-                // Decide whether to continue with other images or stop
-                // For now, we'll stop if one image fails to prevent partial uploads being recorded.
-                throw new Error(`One or more images failed to upload: ${imageUploadError.message}`);
+                // Re-throwing the error ensures the outer catch block also logs it
+                throw imageUploadError; // Rethrow to propagate to the outer try-catch
             }
         }
 
@@ -292,8 +291,9 @@ async function addListing() {
         document.getElementById('image-preview').innerHTML = ''; // Clear image preview
 
     } catch (err) {
+        // This catch block now handles errors from image uploads AND Firestore writes
         alert("Error adding listing: " + err.message);
-        console.error("Error adding listing:", err);
+        console.error("Error adding listing (overall):", err);
     }
 }
 
