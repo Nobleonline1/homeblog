@@ -5,7 +5,13 @@ const firebaseConfig = {
     apiKey: "AIzaSyC2KFvT6R11v6CnyNfxT2qSBbAzBM3D8HA",
     authDomain: "apartment-8ccc6.firebaseapp.com",
     projectId: "apartment-8ccc6",
-    storageBucket: "apartment-8ccc6.appspot.com", // Ensure this matches your actual bucket ID for Firebase Storage (gs://apartment-8ccc6)
+    // MODIFICATION START: Corrected Storage Bucket ID based on previous diagnosis
+    // Change this to 'apartment-8ccc6' if that's your actual bucket name.
+    // If your bucket name is 'apartment-8ccc6.firebasestorage.app', use that instead.
+    // VERIFY THIS IN YOUR FIREBASE CONSOLE -> Storage -> Files tab -> Look at the gs:// URL
+    storageBucket: "apartment-8ccc6", // CHANGED from "apartment-8ccc6.appspot.com"
+    // MODIFICATION END
+
     messagingSenderId: "594096160044",
     appId: "1:594096160044:web:7925a4817256392526c089"
 };
@@ -126,7 +132,7 @@ function loginUser() {
             // Optional: If you want to update your Firestore 'users' collection to mark as verified
             // This part is often not strictly necessary as `user.emailVerified` from Auth is canonical.
             // db.collection('users').doc(user.uid).update({ isEmailVerified: true })
-            //     .catch(e => console.error("Error updating verification status in Firestore:", e));
+            //      .catch(e => console.error("Error updating verification status in Firestore:", e));
 
         })
         .catch(err => {
@@ -134,7 +140,7 @@ function loginUser() {
             if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
                 errorMessage = "Invalid email or password.";
             } else if (err.code === 'auth/too-many-requests') {
-                 errorMessage = "Too many failed login attempts. Please try again later.";
+                    errorMessage = "Too many failed login attempts. Please try again later.";
             }
             authStatus.innerText = errorMessage;
             alert(errorMessage);
@@ -245,14 +251,22 @@ async function addListing() {
         return alert('Please upload at least one photo.');
     }
     
-
     try {
         const imageUrls = [];
         for (const file of Array.from(imageFiles)) {
-            const storageRef = storage.ref(`listing_images/${Date.now()}_${file.name}`);
-            const snapshot = await storageRef.put(file);
-            const url = await snapshot.ref.getDownloadURL();
-            imageUrls.push(url);
+            try {
+                const storageRef = storage.ref(`listing_images/${Date.now()}_${file.name}`);
+                const snapshot = await storageRef.put(file);
+                const url = await snapshot.ref.getDownloadURL();
+                imageUrls.push(url);
+            } catch (imageUploadError) {
+                // More specific error handling for individual image uploads
+                console.error(`Error uploading image ${file.name}:`, imageUploadError);
+                alert(`Failed to upload image ${file.name}. Please try again. Error: ${imageUploadError.message}`);
+                // Decide whether to continue with other images or stop
+                // For now, we'll stop if one image fails to prevent partial uploads being recorded.
+                throw new Error(`One or more images failed to upload: ${imageUploadError.message}`);
+            }
         }
 
         await db.collection('listings').add({
@@ -440,7 +454,7 @@ function callListingOwner(phoneNumber) {
     if (!phoneNumber) {
         alert("Phone number not available for this listing.");
         return;
-    }
+        }
     // Use the tel: protocol to trigger a phone call
     window.location.href = `tel:${phoneNumber}`;
 }
@@ -745,8 +759,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 <input type="text" id="filter-phone" placeholder="Filter by Phone" oninput="loadListings()" />
                 <input type="text" id="filter-rent" placeholder="Filter by Amount" oninput="loadListings()" />
                 <input list="cities" id="filter-location" placeholder="Filter by Location" oninput="loadListings()" />
-                <datalist id="cities"></datalist>
-                <input type="date" id="filter-date" oninput="loadListings()" />
+                <datalist id="cities"></datalist> <input type="date" id="filter-date" oninput="loadListings()" />
             `;
             // Insert filters before the listing container
             container.parentNode.insertBefore(filterContainer, container);
@@ -758,7 +771,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         populateCityDropdown("cities"); // For filter
-        populateCityDropdown("location"); // For listing creation form
+        populateCityDropdown("location"); // For listing creation form (assuming this is a select or datalist)
     }
 
     // Firebase Auth State Listener
